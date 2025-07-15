@@ -36,8 +36,27 @@ export default function CreatePoll() {
     const c = localStorage.getItem('captains');
     return c ? JSON.parse(c) : null;
   });
-  const [tournamentMode, setTournamentMode] = useState(false);
-  // Remove: showTournamentPrompt, showTournamentContinuePrompt, and related logic
+  // Tournament mode: true = tournament (3 captains), false = league (2 captains)
+  const [tournamentMode, setTournamentMode] = useState(() => {
+    const stored = localStorage.getItem('tournamentMode');
+    return stored === null ? false : stored === 'true';
+  });
+
+  // Display string for mode
+  const tournamentModeLabel = tournamentMode ? 'Tournament (3 captains)' : 'League (2 captains)';
+
+  // On mount, sync tournamentMode from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('tournamentMode');
+    if (stored !== null) {
+      setTournamentMode(stored === 'true');
+    }
+  }, []);
+
+  // When tournamentMode changes, update localStorage
+  useEffect(() => {
+    localStorage.setItem('tournamentMode', tournamentMode ? 'true' : 'false');
+  }, [tournamentMode]);
 
   useEffect(() => {
     setPoll(getPoll());
@@ -220,6 +239,12 @@ export default function CreatePoll() {
 
   return (
     <div className="w-full max-w-xl mx-auto p-8 bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-green-200 flex flex-col gap-6 items-center animate-fade-in">
+      {/* Display current tournament mode */}
+      <div className="w-full flex justify-center mb-2">
+        <span className="px-4 py-2 rounded-full bg-blue-100 text-blue-800 font-bold text-lg border-2 border-blue-300">
+          Mode: {tournamentModeLabel}
+        </span>
+      </div>
       <h2 className="text-2xl font-extrabold text-green-700 mb-2">Host a Poll</h2>
       {!poll && isAdmin && (
         <form onSubmit={handleCreate} className="w-full flex flex-col gap-4">
@@ -281,7 +306,7 @@ export default function CreatePoll() {
                  onClick={handleSwitchToTwoCaptains}
                  className="px-8 py-4 rounded-full text-xl font-bold shadow-lg border-2 bg-gradient-to-r from-yellow-400 via-green-500 to-blue-500 text-white border-yellow-400 hover:scale-105 hover:shadow-2xl"
                >
-                 Switch to 2 Captains
+                 Play League
                </button>
              </div>
            )}
@@ -304,7 +329,7 @@ export default function CreatePoll() {
                 </button>
                 {/* Show voters for this option after voting */}
                 {voted && votersByOption[idx] && votersByOption[idx].length > 0 && (
-                  <div className="mt-2 text-sm text-green-800 bg-green-50 rounded-xl px-4 py-2 shadow-inner">
+                  <div className="mt-2 text-xl text-green-800 bg-green-50 rounded-xl px-4 py-2 shadow-inner">
                     <span className="font-bold">Voted:</span> {votersByOption[idx].join(', ')}
                   </div>
                 )}

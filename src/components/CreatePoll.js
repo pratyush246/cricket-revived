@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MdHowToVote, MdSportsCricket, MdEmojiEvents } from 'react-icons/md';
+import { MdHowToVote } from 'react-icons/md';
 import { ADMINS } from './constant';
 
 const POLL_KEY = 'cricket_poll';
@@ -16,13 +16,11 @@ function savePoll(poll) {
   localStorage.setItem(POLL_KEY, JSON.stringify(poll));
 }
 
-// Utility to store yes voters in localStorage
 function saveYesVoters(yesVoters) {
   localStorage.setItem('yes_voters', JSON.stringify(yesVoters));
 }
 
 export default function CreatePoll() {
-  const [tab, setTab] = useState('league');
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [error, setError] = useState('');
@@ -33,13 +31,13 @@ export default function CreatePoll() {
   const [chosenCaptains, setChosenCaptains] = useState(null);
   const [showCaptainDialog, setShowCaptainDialog] = useState(false);
   const [yesVoters, setYesVoters] = useState([]);
-  // Track captains who have been replaced so they can't regain their spot
   const [replacedCaptains, setReplacedCaptains] = useState([]);
-  // Get captains from localStorage for display to all users
   const [storedCaptains, setStoredCaptains] = useState(() => {
     const c = localStorage.getItem('captains');
     return c ? JSON.parse(c) : null;
   });
+  const [tournamentMode, setTournamentMode] = useState(false);
+  // Remove: showTournamentPrompt, showTournamentContinuePrompt, and related logic
 
   useEffect(() => {
     setPoll(getPoll());
@@ -60,6 +58,24 @@ export default function CreatePoll() {
     }
   }, [username]);
 
+  // Listen for localStorage changes (captains, yes_voters)
+  useEffect(() => {
+    function updateCaptainsAndYesVoters() {
+      const c = localStorage.getItem('captains');
+      setStoredCaptains(c ? JSON.parse(c) : null);
+      const yv = localStorage.getItem('yes_voters');
+      setYesVoters(yv ? JSON.parse(yv) : []);
+    }
+    updateCaptainsAndYesVoters();
+    const handleStorage = () => updateCaptainsAndYesVoters();
+    window.addEventListener('storage', handleStorage);
+    const interval = setInterval(updateCaptainsAndYesVoters, 1000);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      clearInterval(interval);
+    };
+  }, []);
+
   const handleOptionChange = (idx, value) => {
     setOptions(opts => opts.map((o, i) => (i === idx ? value : o)));
   };
@@ -75,7 +91,6 @@ export default function CreatePoll() {
       return;
     }
     const newPoll = {
-      type: tab,
       question: question.trim(),
       options: options.map(o => o.trim()),
       votes: {},
@@ -91,7 +106,7 @@ export default function CreatePoll() {
     const updatedPoll = { ...poll, votes: { ...poll.votes, [username]: idx } };
     savePoll(updatedPoll);
     setPoll(updatedPoll);
-    setVoted(true); // still show thank you, but allow changing
+    setVoted(true);
     // Update yes voters in localStorage
     const yesVotersList = Object.entries(updatedPoll.votes)
       .filter(([user, v]) => v === 0)
@@ -110,13 +125,17 @@ export default function CreatePoll() {
     setChosenCaptains(null);
     setYesVoters([]);
     setReplacedCaptains([]);
+    setTournamentMode(false);
+    // Remove: showTournamentPrompt, showTournamentContinuePrompt, and related logic
   };
 
   // Captain selection logic
+  const numCaptains = tournamentMode ? 3 : 2;
+  const minYesVoters = tournamentMode ? 5 : 4;
   const chooseRandomCaptains = () => {
-    if (yesVoters.length < 2) return;
+    if (yesVoters.length < numCaptains) return;
     let shuffled = [...yesVoters].sort(() => 0.5 - Math.random());
-    setChosenCaptains([shuffled[0], shuffled[1]]);
+    setChosenCaptains(shuffled.slice(0, numCaptains));
     setShowCaptainDialog(true);
   };
 
@@ -127,24 +146,24 @@ export default function CreatePoll() {
     return candidates[Math.floor(Math.random() * candidates.length)];
   }
 
-  // Effect: If a captain votes 'No', replace them and update captains list
+  // Replace captain if they vote no, and never allow them to be captain again for this poll
   useEffect(() => {
-    if (!storedCaptains || storedCaptains.length !== 2) return;
+    if (!storedCaptains || storedCaptains.length !== numCaptains) return;
     if (!poll || !poll.votes) return;
     let updated = false;
     let newCaptains = [...storedCaptains];
     let newReplaced = [...replacedCaptains];
-    // Check each captain
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < numCaptains; i++) {
       const cap = storedCaptains[i];
-      // If captain is not in yesVoters and not already replaced
+      // If captain is not in yesVoters or voted no, and not already replaced
       if ((poll.votes[cap] !== 0 || !yesVoters.includes(cap)) && !replacedCaptains.includes(cap)) {
-        // Pick a new captain (not the other captain, not replaced)
-        const exclude = [storedCaptains[1 - i], ...replacedCaptains, cap];
+        // Add to replacedCaptains so they can't be chosen again
+        newReplaced.push(cap);
+        // Pick a new captain (not the other captains, not replaced)
+        const exclude = newCaptains.filter((_, idx) => idx !== i).concat(newReplaced);
         const newCap = pickNewCaptain(exclude);
         if (newCap) {
           newCaptains[i] = newCap;
-          newReplaced.push(cap);
           updated = true;
         }
       }
@@ -154,11 +173,10 @@ export default function CreatePoll() {
       setStoredCaptains(newCaptains);
       setReplacedCaptains(newReplaced);
     }
-  }, [poll, yesVoters, storedCaptains, replacedCaptains]);
+  }, [poll, yesVoters, storedCaptains, replacedCaptains, numCaptains]);
 
-  // When confirming captains, reset replacedCaptains
   const handleConfirmCaptains = () => {
-    if (chosenCaptains && chosenCaptains.length === 2) {
+    if (chosenCaptains && chosenCaptains.length === numCaptains) {
       localStorage.setItem('captains', JSON.stringify(chosenCaptains));
       setShowCaptainDialog(false);
       setStoredCaptains(chosenCaptains);
@@ -169,6 +187,8 @@ export default function CreatePoll() {
   const handleChooseAgain = () => {
     chooseRandomCaptains();
   };
+
+  // No need for effect for prompts; logic is handled inline in render
 
   // Count votes for each option
   const voteCounts = poll && poll.options ? poll.options.map((_, i) =>
@@ -183,29 +203,26 @@ export default function CreatePoll() {
       .map(([user]) => user)
   ) : [];
 
-  // Only show poll for the current tab
-  const showPoll = poll && poll.type === tab;
+  // Handler for switching to 2 captains
+  const handleSwitchToTwoCaptains = () => {
+    setTournamentMode(false);
+    // Remove captains so admin can choose again
+    localStorage.removeItem('captains');
+    setStoredCaptains(null);
+    setChosenCaptains(null);
+    setReplacedCaptains([]);
+  };
+  // Handler for continuing tournament
+  const handleContinueTournament = () => {
+    // This function is no longer needed as the continue/switch prompt is removed.
+    // Keeping it here for now, but it will be removed in a subsequent edit.
+  };
 
   return (
     <div className="w-full max-w-xl mx-auto p-8 bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-green-200 flex flex-col gap-6 items-center animate-fade-in">
-      <div className="flex gap-4 mb-6">
-        <button
-          className={`flex items-center gap-2 px-6 py-2 rounded-full text-lg font-bold shadow border-2 transition-all duration-200 ${tab === 'league' ? 'bg-green-600 text-white border-green-700 scale-105' : 'bg-gray-100 text-green-700 border-green-200 hover:bg-green-100 hover:scale-105'}`}
-          onClick={() => setTab('league')}
-        >
-          <MdSportsCricket className="text-xl" /> League Matches
-        </button>
-        <button
-          className={`flex items-center gap-2 px-6 py-2 rounded-full text-lg font-bold shadow border-2 transition-all duration-200 ${tab === 'tournament' ? 'bg-yellow-500 text-white border-yellow-600 scale-105' : 'bg-gray-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100 hover:scale-105'}`}
-          onClick={() => setTab('tournament')}
-        >
-          <MdEmojiEvents className="text-xl" /> Tournament
-        </button>
-      </div>
-      {/* Only admins can create poll */}
-      {!showPoll && isAdmin && (
+      <h2 className="text-2xl font-extrabold text-green-700 mb-2">Host a Poll</h2>
+      {!poll && isAdmin && (
         <form onSubmit={handleCreate} className="w-full flex flex-col gap-4">
-          <h2 className="text-2xl font-extrabold text-green-700 mb-2">Create a Poll ({tab === 'league' ? 'League Matches' : 'Tournament'})</h2>
           <input
             type="text"
             value={question}
@@ -239,14 +256,35 @@ export default function CreatePoll() {
           {error && <div className="text-red-600 text-center font-bold mt-2">{error}</div>}
         </form>
       )}
-      {/* Non-admins see message if no poll */}
-      {!showPoll && !isAdmin && (
+      {!poll && !isAdmin && (
         <div className="w-full text-center text-lg text-yellow-700 font-bold bg-yellow-50 rounded-xl p-6 shadow-inner">
           Poll is yet to be created.
         </div>
       )}
-      {showPoll && (
+      {poll && (
         <div className="w-full flex flex-col gap-6 items-center">
+           {/* Tournament option always visible to admin if yesVoters >= 5 */}
+           {isAdmin && yesVoters.length >= 5 && !tournamentMode && (
+             <div className="w-full flex flex-col items-center mt-8">
+               <button
+                 onClick={() => setTournamentMode(true)}
+                 className="px-8 py-4 rounded-full text-xl font-bold shadow-lg border-2 bg-gradient-to-r from-yellow-400 via-green-500 to-blue-500 text-white border-yellow-400 hover:scale-105 hover:shadow-2xl"
+               >
+                 Want to play a tournament?
+               </button>
+             </div>
+           )}
+           {/* If 3 captains and yesVoters drops to 4 or less, show choose 2 captains option (always render if conditions match) */}
+           {isAdmin && tournamentMode && storedCaptains && storedCaptains.length === 3 && yesVoters.length <= 4 && (
+             <div className="w-full flex flex-col items-center mt-8">
+               <button
+                 onClick={handleSwitchToTwoCaptains}
+                 className="px-8 py-4 rounded-full text-xl font-bold shadow-lg border-2 bg-gradient-to-r from-yellow-400 via-green-500 to-blue-500 text-white border-yellow-400 hover:scale-105 hover:shadow-2xl"
+               >
+                 Switch to 2 Captains
+               </button>
+             </div>
+           )}
           <h2 className="text-2xl font-extrabold text-green-700 mb-2">{poll.question}</h2>
           <div className="w-full flex flex-col gap-3">
             {poll.options.map((opt, idx) => (
@@ -273,7 +311,6 @@ export default function CreatePoll() {
               </div>
             ))}
           </div>
-          {/* Only admins can see the Delete Poll button */}
           {isAdmin && (
             <button
               onClick={handleDeletePoll}
@@ -282,15 +319,32 @@ export default function CreatePoll() {
               Delete Poll
             </button>
           )}
+          {/* Captains display for all users */}
+          <div className="w-full flex flex-col items-center mt-8">
+            {storedCaptains && storedCaptains.length >= 2 ? (
+              <div className="bg-green-100 border-2 border-green-300 rounded-2xl px-8 py-4 shadow-lg flex flex-col items-center">
+                <h3 className="text-xl font-bold text-green-800 mb-2">Captains</h3>
+                <div className="flex gap-8">
+                  {storedCaptains.map((cap, idx) => (
+                    <span key={cap} className={`text-2xl font-extrabold ${idx === 0 ? 'text-blue-700' : idx === 1 ? 'text-yellow-700' : 'text-green-700'}`}>{cap}</span>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl px-8 py-4 shadow flex flex-col items-center">
+                <span className="text-lg font-semibold text-yellow-700">Captains are yet to be chosen</span>
+              </div>
+            )}
+          </div>
           {/* Choose Captain Option for Admins */}
           {isAdmin && (
             <div className="w-full flex flex-col items-center mt-8">
               <button
                 onClick={chooseRandomCaptains}
-                disabled={yesVoters.length < 4 || (storedCaptains && storedCaptains.length === 2)}
-                className={`px-8 py-4 rounded-full text-xl font-bold shadow-lg border-2 transition-all duration-200 ${yesVoters.length >= 4 && (!storedCaptains || storedCaptains.length !== 2) ? 'bg-gradient-to-r from-green-500 via-blue-500 to-yellow-400 text-white border-green-400 hover:scale-105 hover:shadow-2xl' : 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'}`}
+                disabled={yesVoters.length < minYesVoters || (storedCaptains && storedCaptains.length === numCaptains)}
+                className={`px-8 py-4 rounded-full text-xl font-bold shadow-lg border-2 transition-all duration-200 ${yesVoters.length >= minYesVoters && (!storedCaptains || storedCaptains.length !== numCaptains) ? 'bg-gradient-to-r from-green-500 via-blue-500 to-yellow-400 text-white border-green-400 hover:scale-105 hover:shadow-2xl' : 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'}`}
               >
-                Choose Captain
+                Choose Captain{tournamentMode ? 's (3)' : 's (2)'}
               </button>
               <div className="mt-2 text-green-700 font-semibold text-lg">{yesVoters.length} player{yesVoters.length !== 1 ? 's' : ''} have voted Yes</div>
             </div>
@@ -301,14 +355,12 @@ export default function CreatePoll() {
               <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col items-center gap-6 border-4 border-green-200">
                 <h3 className="text-2xl font-extrabold text-green-700 mb-2">Selected Captains</h3>
                 <div className="flex gap-8 mb-4">
-                  <div className="flex flex-col items-center">
-                    <span className="text-4xl font-bold text-blue-700">{chosenCaptains[0]}</span>
-                    <span className="text-lg text-gray-500 mt-1">Captain 1</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <span className="text-4xl font-bold text-yellow-700">{chosenCaptains[1]}</span>
-                    <span className="text-lg text-gray-500 mt-1">Captain 2</span>
-                  </div>
+                  {chosenCaptains.map((cap, idx) => (
+                    <div key={cap} className="flex flex-col items-center">
+                      <span className={`text-4xl font-bold ${idx === 0 ? 'text-blue-700' : idx === 1 ? 'text-yellow-700' : 'text-green-700'}`}>{cap}</span>
+                      <span className="text-lg text-gray-500 mt-1">Captain {idx + 1}</span>
+                    </div>
+                  ))}
                 </div>
                 <div className="flex gap-4">
                   <button
@@ -333,22 +385,6 @@ export default function CreatePoll() {
               </div>
             </div>
           )}
-         {/* Captains display for all users */}
-         <div className="w-full flex flex-col items-center mt-8">
-           {storedCaptains && storedCaptains.length === 2 ? (
-             <div className="bg-green-100 border-2 border-green-300 rounded-2xl px-8 py-4 shadow-lg flex flex-col items-center">
-               <h3 className="text-xl font-bold text-green-800 mb-2">Captains</h3>
-               <div className="flex gap-8">
-                 <span className="text-2xl font-extrabold text-blue-700">{storedCaptains[0]}</span>
-                 <span className="text-2xl font-extrabold text-yellow-700">{storedCaptains[1]}</span>
-               </div>
-             </div>
-           ) : (
-             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl px-8 py-4 shadow flex flex-col items-center">
-               <span className="text-lg font-semibold text-yellow-700">Captains are yet to be chosen</span>
-             </div>
-           )}
-         </div>
         </div>
       )}
     </div>

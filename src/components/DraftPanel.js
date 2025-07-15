@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import { FiSearch, FiX } from 'react-icons/fi';
 
 export default function DraftPanel({ players, draftedTeam, setDraftedTeam, PlayerCard, yesVoters }) {
   const [search, setSearch] = useState('');
+  const [captains, setCaptains] = useState([]);
+
+  useEffect(() => {
+    const captains = JSON.parse(localStorage.getItem('captains') || '[]');
+    setCaptains(captains);
+  }, []);
 
   const togglePlayer = (player) => {
     const exists = draftedTeam.find(p => p.name === player.name);
@@ -19,6 +25,8 @@ export default function DraftPanel({ players, draftedTeam, setDraftedTeam, Playe
   // Only show players who are in yesVoters
   const yesVotersSet = new Set((yesVoters || []).map(name => name.toLowerCase()));
   const filteredPlayers = players.filter(player =>
+    //not captains as well
+    !captains.includes(player.name.toLowerCase()) &&
     yesVotersSet.has(player.name.toLowerCase()) &&
     (searchTerms.length === 0 || searchTerms.some(term => player.name.toLowerCase().includes(term)))
   );

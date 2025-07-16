@@ -1,5 +1,5 @@
 // App.jsx
-import React,{ useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PDFUploader from './PDFUploader';
 import StatsChart from './StatsChart';
 import Leaderboard from './Leaderboard';
@@ -250,6 +250,13 @@ export default function App() {
   // Track yesVoters for DraftPanel
   const [yesVoters, setYesVoters] = React.useState([]);
 
+  // Memoize props to prevent unnecessary re-renders in children
+  const memoizedPlayers = useMemo(() => players, [players]);
+  const memoizedYesVoters = useMemo(() => yesVoters, [yesVoters]);
+  const memoizedCaptains = useMemo(() => {
+    return JSON.parse(localStorage.getItem('captains') || '[]');
+  }, [yesVoters, username]); // update if yesVoters or username changes
+
   React.useEffect(() => {
     function updateCaptainAndYesVoters() {
       const captains = JSON.parse(localStorage.getItem('captains') || '[]');
@@ -372,10 +379,10 @@ export default function App() {
           {/* Tab Content */}
           <div className="animate-fade-in">
             {activeTab === 'leaderboard' && players.length > 0 && (
-              <Leaderboard players={players} onPlayerSelect={setSelectedPlayer} />
+              <Leaderboard players={memoizedPlayers} onPlayerSelect={setSelectedPlayer} />
             )}
             {(isAdmin || isCaptain) && activeTab === 'draft' && players.length > 0 && (
-              <DraftPanel players={players} draftedTeam={draftedTeam} setDraftedTeam={setDraftedTeam} yesVoters={yesVoters} />
+              <DraftPanel players={memoizedPlayers} draftedTeam={draftedTeam} setDraftedTeam={setDraftedTeam} yesVoters={memoizedYesVoters} username={username} captains={memoizedCaptains} />
             )}
             {isAdmin && activeTab === 'uploader' && (
               <PDFUploader onExtract={handleExtract} />
@@ -383,7 +390,7 @@ export default function App() {
             {(isAdmin || isCaptain) && activeTab === 'sets' && (
               <div className="w-full flex flex-col items-center justify-center min-h-[300px] text-2xl text-green-800 font-bold p-8 bg-green-50 rounded-2xl shadow-inner animate-fade-in">
                 <MdGroups className="text-4xl mb-4 text-green-700" />
-                <SetsOfPlayers players={yesVoters.length > 0 ? players.filter(p => yesVoters.map(n => n.toLowerCase()).includes(p.name.toLowerCase())) : players} />
+                <SetsOfPlayers players={memoizedYesVoters.length > 0 ? memoizedPlayers.filter(p => memoizedYesVoters.map(n => n.toLowerCase()).includes(p.name.toLowerCase())) : memoizedPlayers} />
               </div>
             )}
             {activeTab === 'poll' && (

@@ -1,7 +1,8 @@
 import React, { useState , useEffect} from 'react';
 import { FiSearch, FiX } from 'react-icons/fi';
+import TeamSelection from './TeamSelection';
 
-export default function DraftPanel({ players, draftedTeam, setDraftedTeam, PlayerCard, yesVoters }) {
+export default function DraftPanel({ players, draftedTeam, setDraftedTeam, PlayerCard, yesVoters, username }) {
   const [search, setSearch] = useState('');
   const [captains, setCaptains] = useState([]);
 
@@ -10,15 +11,9 @@ export default function DraftPanel({ players, draftedTeam, setDraftedTeam, Playe
     setCaptains(captains);
   }, []);
 
-  const togglePlayer = (player) => {
-    const exists = draftedTeam.find(p => p.name === player.name);
-    if (exists) {
-      setDraftedTeam(draftedTeam.filter(p => p.name !== player.name));
-    } else {     setDraftedTeam([...draftedTeam, player]);
-    }
-  };
+  
 
-  const totalMVP = draftedTeam.reduce((sum, p) => sum + (p.mvpPoints || 0), 0).toFixed(2);
+
 
   // Filter players by multiple search terms (comma-separated)
   const searchTerms = search.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
@@ -62,11 +57,10 @@ export default function DraftPanel({ players, draftedTeam, setDraftedTeam, Playe
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {filteredPlayers.map(player => {
-            const isDrafted = draftedTeam.find(p => p.name === player.name);
+            const isDrafted = false;
             return (
               <div
                 key={player.name}
-                onClick={() => togglePlayer(player)}
                 className={`cursor-pointer transition-transform transform hover:scale-105 ${
                   isDrafted ? 'ring-4 ring-green-400 bg-gradient-to-br from-green-100 to-green-300' : 'bg-gradient-to-br from-blue-100 to-white'
                 } rounded-3xl shadow-2xl border-2 border-blue-300 p-6 flex flex-col items-center relative`}
@@ -99,17 +93,7 @@ export default function DraftPanel({ players, draftedTeam, setDraftedTeam, Playe
           })}
         </div>
       )}
-      <div className="mt-10">
-        <h3 className="font-semibold text-xl text-blue-800">Drafted Players ({draftedTeam.length}):</h3>
-        <div className="flex flex-wrap gap-3 mt-3">
-          {draftedTeam.map(p => (
-            <span key={p.name} className="bg-green-200 px-4 py-2 rounded-xl font-bold text-green-900 shadow text-lg">
-              {p.name} — {p.mvpPoints} pts
-            </span>
-          ))}
-        </div>
-        <p className="mt-4 font-extrabold text-2xl text-green-700">Total MVP Points: {totalMVP}</p>
-      </div>
+     <TeamSelection  players={players} yesVoters={yesVoters} captains={captains} username={username}/>
     </div>
   );
 }

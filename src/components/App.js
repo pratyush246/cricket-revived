@@ -7,6 +7,7 @@ import SetsOfPlayers from './SetsOfPlayers';
 import DraftPanel from './DraftPanel';
 import Login from './Login';
 import CreatePoll from './CreatePoll';
+import AutoPanel from './AutoPanel'; // Add this import (create the file if it doesn't exist)
 import { ADMINS } from './constant';
 import { FaTrophy, FaUserEdit, FaFileUpload, FaGithub } from 'react-icons/fa';
 import { GiCricketBat } from 'react-icons/gi';
@@ -262,7 +263,7 @@ export default function App() {
       const captains = JSON.parse(localStorage.getItem('captains') || '[]');
       const yv = JSON.parse(localStorage.getItem('yes_voters') || '[]');
       setYesVoters(yv);
-      setIsCaptain(captains.includes(username) && yv.includes(username));
+      setIsCaptain(captains.includes(username?.toLowerCase()) && yv.includes(username?.toLowerCase()));
     }
     updateCaptainAndYesVoters();
     // Listen for changes to captains and yes_voters in localStorage (cross-tab)
@@ -353,6 +354,14 @@ export default function App() {
                 <GiCricketBat className="text-xl" /> Draft Panel
               </button>
             )}
+            {(isAdmin || isCaptain) && (
+              <button
+                className={`flex items-center gap-2 px-6 py-3 cursor-pointer rounded-full text-lg font-bold shadow transition-all duration-200 border-2 ${activeTab === 'autopanel' ? 'bg-green-600 text-white border-green-700 scale-105' : 'bg-gray-100 text-green-700 border-green-200 hover:bg-green-100 hover:scale-105'}`}
+                onClick={() => setActiveTab('autopanel')}
+              >
+                <MdGroups className="text-xl" /> AutoPanel
+              </button>
+            )}
             {isAdmin && (
               <button
                 className={`flex items-center gap-2 px-6 py-3 cursor-pointer rounded-full text-lg font-bold shadow transition-all duration-200 border-2 ${activeTab === 'uploader' ? 'bg-green-600 text-white border-green-700 scale-105' : 'bg-gray-100 text-green-700 border-green-200 hover:bg-green-100 hover:scale-105'}`}
@@ -384,13 +393,16 @@ export default function App() {
             {(isAdmin || isCaptain) && activeTab === 'draft' && players.length > 0 && (
               <DraftPanel players={memoizedPlayers} draftedTeam={draftedTeam} setDraftedTeam={setDraftedTeam} yesVoters={memoizedYesVoters} username={username} captains={memoizedCaptains} />
             )}
+            {(isAdmin || isCaptain) && activeTab === 'autopanel' && (
+              <AutoPanel players={memoizedPlayers} captains={memoizedCaptains} yesVoters={memoizedYesVoters} username={username} />
+            )}
             {isAdmin && activeTab === 'uploader' && (
               <PDFUploader onExtract={handleExtract} />
             )}
             {(isAdmin || isCaptain) && activeTab === 'sets' && (
               <div className="w-full flex flex-col items-center justify-center min-h-[300px] text-2xl text-green-800 font-bold p-8 bg-green-50 rounded-2xl shadow-inner animate-fade-in">
                 <MdGroups className="text-4xl mb-4 text-green-700" />
-                <SetsOfPlayers players={memoizedYesVoters.length > 0 ? memoizedPlayers.filter(p => memoizedYesVoters.map(n => n.toLowerCase()).includes(p.name.toLowerCase())) : memoizedPlayers} />
+                <SetsOfPlayers players={memoizedYesVoters.length > 0 ? memoizedPlayers.filter(p => memoizedYesVoters.map(n => n.toLowerCase()).includes(p.name.toLowerCase())) : memoizedPlayers} captains={memoizedCaptains} username={username} isCaptain={isCaptain} isAdmin={isAdmin} />
               </div>
             )}
             {activeTab === 'poll' && (

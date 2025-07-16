@@ -41,6 +41,9 @@ export default function CreatePoll() {
     const stored = localStorage.getItem('tournamentMode');
     return stored === null ? false : stored === 'true';
   });
+  // Add state for manual captain entry
+  const [manualCaptainNames, setManualCaptainNames] = useState(['', '', '']);
+  const [manualCaptainError, setManualCaptainError] = useState('');
 
   // Display string for mode
   const tournamentModeLabel = tournamentMode ? 'Tournament (3 captains)' : 'League (2 captains)';
@@ -237,6 +240,28 @@ export default function CreatePoll() {
     // Keeping it here for now, but it will be removed in a subsequent edit.
   };
 
+  // Handler for manual captain selection
+  const handleManualCaptainChange = (idx, value) => {
+    setManualCaptainNames(names => names.map((n, i) => (i === idx ? value : n)));
+  };
+  const handleManualCaptainSelect = () => {
+    // Only allow if all names are filled and unique
+    const names = manualCaptainNames.slice(0, numCaptains).map(n => n.trim()).filter(Boolean);
+    if (names.length !== numCaptains || new Set(names.map(n => n.toLowerCase())).size !== numCaptains) {
+      setManualCaptainError(`Please enter ${numCaptains} unique names.`);
+      return;
+    }
+    // Optionally, check if names are in yesVoters
+    // const invalid = names.find(n => !yesVoters.includes(n));
+    // if (invalid) {
+    //   setManualCaptainError(`Name not in yes voters: ${invalid}`);
+    //   return;
+    // }
+    setManualCaptainError('');
+    setChosenCaptains(names);
+    setShowCaptainDialog(true);
+  };
+
   return (
     <div className="w-full max-w-xl mx-auto p-8 bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-green-200 flex flex-col gap-6 items-center animate-fade-in">
       {/* Display current tournament mode */}
@@ -363,7 +388,7 @@ export default function CreatePoll() {
           </div>
           {/* Choose Captain Option for Admins */}
           {isAdmin && (
-            <div className="w-full flex flex-col items-center mt-8">
+            <div className="w-full flex flex-col items-center mt-8 gap-4">
               <button
                 onClick={chooseRandomCaptains}
                 disabled={yesVoters.length < minYesVoters || (storedCaptains && storedCaptains.length === numCaptains)}
@@ -371,6 +396,48 @@ export default function CreatePoll() {
               >
                 Choose Captain{tournamentMode ? 's (3)' : 's (2)'}
               </button>
+              {/* Manual captain entry */}
+              <div className="flex flex-col md:flex-row gap-2 items-center w-full justify-center">
+                {[...Array(numCaptains)].map((_, idx) => (
+                  <>
+                    <input
+                      key={idx}
+                      type="text"
+                      list={`yesvoters-list-${idx}`}
+                      value={manualCaptainNames[idx]}
+                      onChange={e => handleManualCaptainChange(idx, e.target.value)}
+                      placeholder={`Captain ${idx + 1} name`}
+                      className="px-4 py-2 rounded-full border-2 border-green-200 shadow text-lg w-40"
+                      autoComplete="off"
+                    />
+                    <datalist id={`yesvoters-list-${idx}`}>
+                      {yesVoters.map(name => (
+                        <option key={name} value={name} />
+                      ))}
+                    </datalist>
+                  </>
+                ))}
+                <button
+                  onClick={() => {
+                    // Only allow if all names are filled, unique, and in yesVoters
+                    const names = manualCaptainNames.slice(0, numCaptains).map(n => n.trim()).filter(Boolean);
+                    if (names.length !== numCaptains || new Set(names.map(n => n.toLowerCase())).size !== numCaptains) {
+                      setManualCaptainError(`Please enter ${numCaptains} unique names.`);
+                      return;
+                    }
+                    const invalid = names.find(n => !yesVoters.map(yv => yv.toLowerCase()).includes(n.toLowerCase()));
+                    if (invalid) {
+                      setManualCaptainError(`Name not in yes voters: ${invalid}`);
+                      return;
+                    }
+                    setManualCaptainError('');
+                    setChosenCaptains(names);
+                    setShowCaptainDialog(true);
+                  }}
+                  className="px-6 py-2 rounded-full bg-blue-500 text-white font-bold text-lg ml-2 border-2 border-blue-700 hover:bg-blue-600 transition"
+                >OK</button>
+              </div>
+              {manualCaptainError && <div className="text-red-600 text-center font-bold mt-2">{manualCaptainError}</div>}
               <div className="mt-2 text-green-700 font-semibold text-lg">{yesVoters.length} player{yesVoters.length !== 1 ? 's' : ''} have voted Yes</div>
             </div>
           )}

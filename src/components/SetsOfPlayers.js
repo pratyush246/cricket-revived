@@ -1,6 +1,6 @@
 import React from 'react';
 import { MdEmojiEvents, MdGroups, MdStar, MdSportsCricket } from 'react-icons/md';
-
+import AuctionPanel from './AuctionPanel';
 function getCumulativePoints(player) {
     
   const matches = player.matches || 0;
@@ -46,7 +46,7 @@ const bracketStyles = [
   }
 ];
 
-const SetsOfPlayers = ({ players }) => {
+const SetsOfPlayers = ({ players, captains, username, isCaptain, isAdmin }) => {
   // Calculate points and sort
   const scoredPlayers = players.map(p => ({ ...p, cumulativePoints: getCumulativePoints(p) }));
   const sorted = [...scoredPlayers].sort((a, b) => b.cumulativePoints - a.cumulativePoints);
@@ -85,6 +85,7 @@ const SetsOfPlayers = ({ players }) => {
           </div>
         ))}
       </div>
+      <AuctionPanel players={players} captains={captains} isAdmin={isAdmin} isCaptain={isCaptain} username={username} />
     </div>
   );
 };

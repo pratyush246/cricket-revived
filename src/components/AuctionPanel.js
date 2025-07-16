@@ -20,19 +20,17 @@ function getPlayerPoints(player) {
   return player.mvpPoints ?? player.cumulativePoints ?? 0;
 }
 
-function getBracketPlayers(sortedPlayers, soldPlayers, bracketIdx) {
+function getBracketPlayers(sortedPlayers, soldPlayers, bracketIdx, captains) {
   const n = sortedPlayers.length;
   const setSize = Math.ceil(n / 3);
   let start = bracketIdx * setSize;
   let end = Math.min(start + setSize, n);
-  return sortedPlayers.slice(start, end).filter(p => !soldPlayers.includes(p.name));
+  const captainSet = new Set((captains || []).map(c => c.toLowerCase()));
+  return sortedPlayers.slice(start, end).filter(p => !soldPlayers.includes(p.name) && !captainSet.has((p.name || '').toLowerCase()));
 }
 
 function getInitialState(players, captains) {
-  // Remove captains from auction pool
-  const lowerCaptains = (captains || []).map(c => c.toLowerCase());
-  const filteredPlayers = players.filter(p => !lowerCaptains.includes(p.name.toLowerCase()));
-  const sorted = [...filteredPlayers].sort((a, b) => getPlayerPoints(b) - getPlayerPoints(a));
+  const sorted = [...players].sort((a, b) => getPlayerPoints(b) - getPlayerPoints(a));
   return {
     sortedPlayers: sorted,
     soldPlayers: [],
@@ -46,7 +44,7 @@ function getInitialState(players, captains) {
     bracketIdx: 0, // 0: top, 1: mid, 2: low
     currentPlayer: null, // will be set on startAuction
     unsoldPlayers: [], // names of unsold players
-    auctioningUnsold: false, // are we in the unsold round?
+    auctioningUnsold: false, // are we auctioning unsold players?
   };
 }
 
@@ -66,6 +64,7 @@ const AuctionPanel = ({ players, captains, isAdmin, isCaptain, username }) => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        // Defensive: recalc sortedPlayers if player list changed
         if (parsed.sortedPlayers?.length !== players.length) {
           return getInitialState(players, captains);
         }
@@ -78,7 +77,7 @@ const AuctionPanel = ({ players, captains, isAdmin, isCaptain, username }) => {
   });
   const timerRef = useRef();
 
-  // Persist state
+  // Persist state (including unsoldPlayers)
   useEffect(() => {
     localStorage.setItem(AUCTION_STATE_KEY, JSON.stringify(state));
   }, [state]);
@@ -96,25 +95,33 @@ const AuctionPanel = ({ players, captains, isAdmin, isCaptain, username }) => {
     return () => clearTimeout(timerRef.current);
   }, [state.auctionActive, state.timer]);
 
-  // Start auction for next player (random from current bracket or unsold)
+  // Start auction for next player (random from current bracket or from unsold list)
   const startAuction = () => {
     setState(s => {
-      let { sortedPlayers, soldPlayers, bracketIdx, unsoldPlayers, auctioningUnsold } = s;
-      let availablePlayers;
-      if (auctioningUnsold) {
-        // Only pick from unsoldPlayers (in sorted order)
-        availablePlayers = sortedPlayers.filter(p => unsoldPlayers.includes(p.name));
-      } else {
-        availablePlayers = sortedPlayers.filter(p => !soldPlayers.includes(p.name) && !unsoldPlayers.includes(p.name));
+      // If auctioning unsold, pick next unsold (skip captains, case-insensitive)
+      const captainSet = new Set((captains || []).map(c => c.toLowerCase()));
+      if (s.auctioningUnsold) {
+        const nextUnsold = s.unsoldPlayers.find(name => !captainSet.has((name || '').toLowerCase()));
+        const playerObj = s.sortedPlayers.find(p => p.name === nextUnsold);
+        return {
+          ...s,
+          auctionActive: true,
+          timer: TIMER_SECONDS,
+          bids: {},
+          lastWinner: null,
+          currentPlayer: playerObj || null,
+          unsoldPlayers: s.unsoldPlayers,
+        };
       }
-      let bracketPlayers = auctioningUnsold
-        ? availablePlayers // just use all unsold for random pick
-        : getBracketPlayers(sortedPlayers, soldPlayers.concat(unsoldPlayers), bracketIdx);
+      // Normal bracket logic
+      const { sortedPlayers, soldPlayers, bracketIdx } = s;
+      let bracketPlayers = getBracketPlayers(sortedPlayers, soldPlayers.concat(s.unsoldPlayers), bracketIdx, captains);
       let nextBracket = bracketIdx;
+      // If bracket empty, cycle to next (max 3 tries)
       let tries = 0;
-      while (!auctioningUnsold && bracketPlayers.length === 0 && tries < 3) {
+      while (bracketPlayers.length === 0 && tries < 3) {
         nextBracket = (nextBracket + 1) % 3;
-        bracketPlayers = getBracketPlayers(sortedPlayers, soldPlayers.concat(unsoldPlayers), nextBracket);
+        bracketPlayers = getBracketPlayers(sortedPlayers, soldPlayers.concat(s.unsoldPlayers), nextBracket, captains);
         tries++;
       }
       let currentPlayer = null;
@@ -127,7 +134,7 @@ const AuctionPanel = ({ players, captains, isAdmin, isCaptain, username }) => {
         timer: TIMER_SECONDS,
         bids: {},
         lastWinner: null,
-        bracketIdx: auctioningUnsold ? 0 : (nextBracket + 1) % 3, // cycle for next round
+        bracketIdx: (nextBracket + 1) % 3, // cycle for next round
         currentPlayer,
       };
     });
@@ -156,6 +163,7 @@ const AuctionPanel = ({ players, captains, isAdmin, isCaptain, username }) => {
   // End auction, assign player
   function handleAuctionEnd() {
     if (!currentPlayer) {
+      // If no player found, just advance
       setState(s => ({
         ...s,
         auctionActive: false,
@@ -169,28 +177,29 @@ const AuctionPanel = ({ players, captains, isAdmin, isCaptain, username }) => {
     }
     let winner = highestBidder;
     let price = highestBid;
+    // If no valid bids, mark as unsold
     if (!winner || price < basePrice) {
-      // No valid bids: add to unsoldPlayers
-      setState(s => ({
-        ...s,
-        auctionActive: false,
-        lastWinner: null,
-        currentIdx: s.currentIdx + 1,
-        timer: TIMER_SECONDS,
-        bids: {},
-        soldPlayers: [...s.soldPlayers, currentPlayer.name],
-        currentPlayer: null,
-        unsoldPlayers: s.unsoldPlayers.includes(currentPlayer.name)
-          ? s.unsoldPlayers
-          : [...s.unsoldPlayers, currentPlayer.name],
-      }));
+      setState(s => {
+        const alreadyUnsold = s.unsoldPlayers.includes(currentPlayer.name);
+        return {
+          ...s,
+          auctionActive: false,
+          lastWinner: null,
+          currentIdx: s.currentIdx + 1,
+          timer: TIMER_SECONDS,
+          bids: {},
+          soldPlayers: [...s.soldPlayers, currentPlayer.name],
+          currentPlayer: null,
+          unsoldPlayers: alreadyUnsold ? s.unsoldPlayers : [...s.unsoldPlayers, currentPlayer.name],
+        };
+      });
       return;
     }
     setState(s => {
       const newBudgets = { ...s.budgets, [winner]: s.budgets[winner] - price };
       const newRosters = { ...s.rosters, [winner]: [...(s.rosters[winner] || []), currentPlayer] };
-      // Remove from unsoldPlayers if present
-      const newUnsold = s.unsoldPlayers.filter(name => name !== currentPlayer.name);
+      // Remove from unsold if present
+      const newUnsold = s.unsoldPlayers.filter(n => n !== currentPlayer.name);
       return {
         ...s,
         soldPlayers: [...s.soldPlayers, currentPlayer.name],
@@ -207,35 +216,27 @@ const AuctionPanel = ({ players, captains, isAdmin, isCaptain, username }) => {
     });
   }
 
-  // Auto-advance to next player or unsold round
+  // Auto-advance to next player or unsold
   useEffect(() => {
     if (!state.auctionActive) {
-      // If all players auctioned and there are unsold, start unsold round
+      const totalPlayers = state.sortedPlayers.length;
+      // If all main players auctioned, but unsold remain, start auctioning unsold
       if (!state.auctioningUnsold && state.soldPlayers.length >= totalPlayers && state.unsoldPlayers.length > 0) {
-        // Start unsold round
-        setTimeout(() => {
-          setState(s => ({
-            ...s,
-            soldPlayers: s.soldPlayers.filter(name => !s.unsoldPlayers.includes(name)), // remove unsold from sold
-            auctioningUnsold: true,
-            currentIdx: 0,
-            lastWinner: null,
-            currentPlayer: null,
-          }));
-        }, 1500);
+        setState(s => ({ ...s, auctioningUnsold: true, soldPlayers: s.soldPlayers.filter(n => !s.unsoldPlayers.includes(n)), currentIdx: 0 }));
         return;
       }
-      // If all unsold auctioned, finish
+      // If auctioning unsold and all unsold auctioned, finish
       if (state.auctioningUnsold && state.unsoldPlayers.length === 0) {
+        setState(s => ({ ...s, auctioningUnsold: false }));
         return;
       }
-      // Otherwise, continue auction
-      if ((state.lastWinner || state.soldPlayers.length === 0) && ((state.auctioningUnsold && state.unsoldPlayers.length > 0) || (!state.auctioningUnsold && state.soldPlayers.length < totalPlayers))) {
+      // If auctioning unsold, keep going until unsoldPlayers is empty
+      if ((state.auctioningUnsold && state.unsoldPlayers.length > 0) || (!state.auctioningUnsold && state.soldPlayers.length < totalPlayers)) {
         const t = setTimeout(() => startAuction(), 1500);
         return () => clearTimeout(t);
       }
     }
-  }, [state.auctionActive, state.soldPlayers.length, state.lastWinner, totalPlayers, state.unsoldPlayers.length, state.auctioningUnsold]);
+  }, [state.auctionActive, state.soldPlayers.length, state.unsoldPlayers.length, state.auctioningUnsold, state.lastWinner, state.sortedPlayers.length]);
 
   // Reset auction
   const resetAuction = () => {
@@ -244,11 +245,11 @@ const AuctionPanel = ({ players, captains, isAdmin, isCaptain, username }) => {
   };
 
   // Auction finished?
-  if (state.auctioningUnsold && state.unsoldPlayers.length === 0) {
+  if (!state.auctioningUnsold && state.soldPlayers.length >= totalPlayers && state.unsoldPlayers.length === 0) {
     return (
       <div className="w-full flex flex-col items-center justify-center mt-8 p-6 bg-yellow-50 rounded-xl shadow-inner border-2 border-yellow-200">
         <h2 className="text-3xl font-bold text-yellow-700 mb-2">Auction Complete!</h2>
-        <div className="text-lg text-yellow-800 mb-4">All players have been auctioned (including unsold round).</div>
+        <div className="text-lg text-yellow-800 mb-4">All players have been auctioned.</div>
         <div className="w-full flex flex-wrap gap-8 justify-center">
           {captains.map(c => (
             <div key={c} className="bg-white rounded-xl shadow p-4 min-w-[220px]">
@@ -266,6 +267,7 @@ const AuctionPanel = ({ players, captains, isAdmin, isCaptain, username }) => {
     );
   }
 
+  // Show unsold list at the bottom
   return (
     <div className="w-full flex flex-col items-center justify-center mt-8 p-6 bg-yellow-50 rounded-xl shadow-inner border-2 border-yellow-200">
       <h2 className="text-3xl font-bold text-yellow-700 mb-2">Auction Panel</h2>
@@ -338,16 +340,19 @@ const AuctionPanel = ({ players, captains, isAdmin, isCaptain, username }) => {
           </div>
         ))}
       </div>
-      {/* Unsold Players List */}
+      {/* Unsold List */}
       {state.unsoldPlayers.length > 0 && (
-        <div className="w-full max-w-2xl mt-8 p-4 bg-red-50 border-2 border-red-200 rounded-xl shadow-inner">
-          <h3 className="text-xl font-bold text-red-700 mb-2">Unsold Players (will be re-auctioned):</h3>
+        <div className="w-full max-w-2xl mt-8 bg-white rounded-xl shadow p-4 border-2 border-yellow-200">
+          <div className="font-bold text-yellow-700 text-xl mb-2">Unsold Players (will be re-auctioned):</div>
           <ul className="flex flex-wrap gap-4">
-            {state.sortedPlayers.filter(p => state.unsoldPlayers.includes(p.name)).map(p => (
-              <li key={p.name} className="px-4 py-2 bg-white rounded shadow text-red-800 font-semibold border border-red-200">
-                {p.name} <span className="text-xs text-gray-500">({getPlayerPoints(p)} pts)</span>
-              </li>
-            ))}
+            {state.unsoldPlayers.map(name => {
+              const p = state.sortedPlayers.find(p => p.name === name);
+              return (
+                <li key={name} className="px-4 py-2 bg-yellow-100 rounded-lg text-yellow-900 font-semibold shadow">
+                  {name} <span className="text-xs text-gray-500">({getPlayerPoints(p)} pts)</span>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

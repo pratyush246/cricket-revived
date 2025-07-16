@@ -197,28 +197,28 @@ export default function StatsChart({ player }) {
   };
 
   return (
-    <div className="flex flex-col gap-16 w-full max-w-5xl mx-auto py-12 px-2 md:px-0">
+    <div className="flex flex-col gap-8 md:gap-16 w-full max-w-full md:max-w-5xl mx-auto py-4 md:py-12 px-1 md:px-0 overflow-x-auto">
       {/* Batting */}
-      <div className="w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12 flex flex-col items-stretch mb-8 border-t-8 border-green-300">
-        <div className="text-3xl font-extrabold text-green-700 mb-4 tracking-wide flex items-center gap-2">
+      <div className="w-full bg-white rounded-3xl shadow-2xl p-4 md:p-12 flex flex-col items-stretch mb-4 md:mb-8 border-t-8 border-green-300">
+        <div className="text-xl md:text-3xl font-extrabold text-green-700 mb-2 md:mb-4 tracking-wide flex items-center gap-2">
           🏏 Batting Stats
         </div>
-        <div className="text-lg font-semibold text-blue-700 mb-8 flex items-center gap-4">
+        <div className="text-base md:text-lg font-semibold text-blue-700 mb-4 md:mb-8 flex items-center gap-2 md:gap-4">
           <span>Highest Score:</span>
-          <span className="text-2xl font-bold text-green-800 bg-green-100 px-4 py-1 rounded-xl shadow-inner">{player.batting.highest || '-'}</span>
+          <span className="text-lg md:text-2xl font-bold text-green-800 bg-green-100 px-2 md:px-4 py-1 rounded-xl shadow-inner">{player.batting.highest || '-'}</span>
         </div>
-        <div className="flex flex-col md:flex-row gap-12 w-full items-stretch justify-center">
-          <div className="w-full md:max-w-lg bg-green-50 rounded-2xl shadow p-6 flex flex-col items-center overflow-visible min-h-[340px]">
-            <div className="text-xl font-bold text-blue-700 mb-4">Breakdown</div>
+        <div className="flex flex-col md:flex-row gap-4 md:gap-12 w-full items-stretch justify-center">
+          <div className="w-full md:max-w-lg bg-green-50 rounded-2xl shadow p-3 md:p-6 flex flex-col items-center overflow-visible min-h-[200px] md:min-h-[340px]">
+            <div className="text-base md:text-xl font-bold text-blue-700 mb-2 md:mb-4">Breakdown</div>
             <div className="flex items-center justify-center w-full h-auto">
               <Pie data={battingPieData} options={pieOptions} />
             </div>
           </div>
-          <div className="flex-1 w-full bg-green-50 rounded-2xl shadow p-6 overflow-visible flex flex-col min-h-[340px]">
-            <div className="text-xl font-bold text-blue-700 mb-4">Highlights</div>
+          <div className="flex-1 w-full bg-green-50 rounded-2xl shadow p-3 md:p-6 overflow-visible flex flex-col min-h-[200px] md:min-h-[340px]">
+            <div className="text-base md:text-xl font-bold text-blue-700 mb-2 md:mb-4">Highlights</div>
             <Bar data={battingBarData} options={barOptions} />
-            <div className="mt-8">
-              <div className="text-lg font-bold text-yellow-700 mb-2">Milestones</div>
+            <div className="mt-4 md:mt-8">
+              <div className="text-base md:text-lg font-bold text-yellow-700 mb-1 md:mb-2">Milestones</div>
               <Bar data={battingMilestoneBarData} options={barOptions} />
             </div>
           </div>

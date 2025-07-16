@@ -288,8 +288,8 @@ export default function App() {
       {/* Soft overlay for extra depth */}
       <div className="pointer-events-none fixed inset-0 z-0 bg-gradient-to-br from-white/40 via-green-100/20 to-yellow-100/30" />
       {/* Floating cricket ball animation (icon only) */}
-      <div className="fixed bottom-32 right-12 z-10 animate-bounce-slow pointer-events-none opacity-80">
-        <MdSportsCricket className="text-[60px] text-green-700 drop-shadow-lg" />
+      <div className="fixed bottom-20 right-4 z-10 animate-bounce-slow pointer-events-none opacity-80 max-sm:bottom-4 max-sm:right-2">
+        <MdSportsCricket className="text-[40px] md:text-[60px] text-green-700 drop-shadow-lg" />
       </div>
       {/* Sparkles animation */}
       <div className="pointer-events-none fixed inset-0 z-0">
@@ -310,7 +310,7 @@ export default function App() {
       {selectedPlayer ? (
         <div className="fixed inset-0 z-50 flex flex-col items-start justify-start bg-gradient-to-br from-green-200 via-green-100 to-yellow-100 animate-bg-fade overflow-auto">
           <button
-            className="fixed top-6 left-6 text-4xl text-green-700 hover:text-yellow-500 font-extrabold focus:outline-none bg-white/80 rounded-full shadow-lg w-14 h-14 flex items-center justify-center z-50 border-2 border-green-200"
+            className="fixed top-4 left-2 text-3xl md:text-4xl text-green-700 hover:text-yellow-500 font-extrabold focus:outline-none bg-white/80 rounded-full shadow-lg w-12 h-12 md:w-14 md:h-14 flex items-center justify-center z-50 border-2 border-green-200"
             onClick={() => setSelectedPlayer(null)}
             aria-label="Back"
             style={{lineHeight: 1}}
@@ -318,7 +318,7 @@ export default function App() {
             &#8592;
           </button>
           <div className="w-full flex flex-col items-center justify-start overflow-auto pb-8">
-            <h3 className="text-4xl md:text-5xl font-extrabold text-center mt-8 mb-8 text-green-700 drop-shadow-lg tracking-tight bg-gradient-to-r from-green-800 via-yellow-600 to-green-500 bg-clip-text text-transparent">
+            <h3 className="text-3xl md:text-5xl font-extrabold text-center mt-8 mb-8 text-green-700 drop-shadow-lg tracking-tight bg-gradient-to-r from-green-800 via-yellow-600 to-green-500 bg-clip-text text-transparent">
               {selectedPlayer.name} <span className="font-light">- Full Stats</span>
             </h3>
             <div className="w-full max-w-6xl mx-auto px-2 md:px-8">
@@ -329,17 +329,17 @@ export default function App() {
       ) : (
         <>
           {/* Header with cricket bat and ball */}
-          <div className="flex items-center justify-center gap-4 mb-2 mt-2 animate-fade-in">
-            <GiCricketBat className="text-5xl text-green-700 drop-shadow-lg -rotate-12" />
-            <h1 className="text-5xl md:text-6xl font-extrabold text-center bg-gradient-to-r from-green-800 via-yellow-600 to-green-500 bg-clip-text text-transparent drop-shadow-lg tracking-tight animate-fade-in">Cricket Revived</h1>
-            <MdSportsCricket className="text-5xl text-green-700 drop-shadow-lg rotate-12" />
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-4 mb-2 mt-2 animate-fade-in">
+            <GiCricketBat className="text-4xl md:text-5xl text-green-700 drop-shadow-lg -rotate-12" />
+            <h1 className="text-3xl md:text-6xl font-extrabold text-center bg-gradient-to-r from-green-800 via-yellow-600 to-green-500 bg-clip-text text-transparent drop-shadow-lg tracking-tight animate-fade-in">Cricket Revived</h1>
+            <MdSportsCricket className="text-4xl md:text-5xl text-green-700 drop-shadow-lg rotate-12" />
           </div>
           {/* Dashed crease divider */}
-          <div className="w-full flex justify-center mb-6 animate-fade-in">
-            <div className="border-t-4 border-dashed border-green-600 w-2/3" style={{borderRadius: 2}}></div>
+          <div className="w-full flex justify-center mb-4 md:mb-6 animate-fade-in">
+            <div className="border-t-4 border-dashed border-green-600 w-4/5 md:w-2/3" style={{borderRadius: 2}}></div>
           </div>
           {/* Tab Buttons */}
-          <div className="flex space-x-4 mb-8 justify-center">
+          <div className="flex flex-wrap gap-2 md:gap-4 mb-4 md:mb-8 justify-center px-2">
             <button
               className={`flex items-center gap-2 px-6 py-3 cursor-pointer rounded-full text-lg font-bold shadow transition-all duration-200 border-2 ${activeTab === 'leaderboard' ? 'bg-green-600 text-white border-green-700 scale-105' : 'bg-gray-100 text-green-700 border-green-200 hover:bg-green-100 hover:scale-105'}`}
               onClick={() => setActiveTab('leaderboard')}
@@ -386,7 +386,7 @@ export default function App() {
             </button>
           </div>
           {/* Tab Content */}
-          <div className="animate-fade-in">
+          <div className="animate-fade-in px-1 md:px-0">
             {activeTab === 'leaderboard' && players.length > 0 && (
               <Leaderboard players={memoizedPlayers} onPlayerSelect={setSelectedPlayer} />
             )}

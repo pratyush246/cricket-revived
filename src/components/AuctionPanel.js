@@ -269,10 +269,10 @@ const AuctionPanel = ({ players, captains, isAdmin, isCaptain, username }) => {
 
   // Show unsold list at the bottom
   return (
-    <div className="w-full flex flex-col items-center justify-center mt-8 p-6 bg-yellow-50 rounded-xl shadow-inner border-2 border-yellow-200">
-      <h2 className="text-3xl font-bold text-yellow-700 mb-2">Auction Panel</h2>
-      <div className="mb-4 text-lg text-yellow-800">Budget: ₹200 per captain. Base price: Top ₹6, Mid ₹4, Low ₹2. 1 min per player.</div>
-      <div className="w-full flex flex-col md:flex-row gap-8 justify-center items-start mb-6">
+    <div className="w-full flex flex-col items-center justify-center mt-4 md:mt-8 p-2 md:p-6 bg-yellow-50 rounded-xl shadow-inner border-2 border-yellow-200 overflow-x-auto">
+      <h2 className="text-2xl md:text-3xl font-bold text-yellow-700 mb-2 text-center">Auction Panel</h2>
+      <div className="mb-2 md:mb-4 text-base md:text-lg text-yellow-800 text-center">Budget: ₹200 per captain. Base price: Top ₹6, Mid ₹4, Low ₹2. 1 min per player.</div>
+      <div className="w-full flex flex-col md:flex-row gap-4 md:gap-8 justify-center items-start mb-4 md:mb-6">
         <div className="flex-1 min-w-[260px] bg-white rounded-xl shadow p-4">
           <div className="font-bold text-green-700 text-xl mb-2">Current Player</div>
           {currentPlayer ? (
@@ -342,13 +342,13 @@ const AuctionPanel = ({ players, captains, isAdmin, isCaptain, username }) => {
       </div>
       {/* Unsold List */}
       {state.unsoldPlayers.length > 0 && (
-        <div className="w-full max-w-2xl mt-8 bg-white rounded-xl shadow p-4 border-2 border-yellow-200">
-          <div className="font-bold text-yellow-700 text-xl mb-2">Unsold Players (will be re-auctioned):</div>
-          <ul className="flex flex-wrap gap-4">
+        <div className="w-full max-w-full overflow-x-auto mt-4 md:mt-8 bg-white rounded-xl shadow p-2 md:p-4 border-2 border-yellow-200">
+          <div className="font-bold text-yellow-700 text-lg md:text-xl mb-2">Unsold Players (will be re-auctioned):</div>
+          <ul className="flex flex-wrap md:flex-nowrap gap-2 md:gap-4">
             {state.unsoldPlayers.map(name => {
               const p = state.sortedPlayers.find(p => p.name === name);
               return (
-                <li key={name} className="px-4 py-2 bg-yellow-100 rounded-lg text-yellow-900 font-semibold shadow">
+                <li key={name} className="px-2 md:px-4 py-1 md:py-2 bg-yellow-100 rounded-lg text-yellow-900 font-semibold shadow text-xs md:text-base whitespace-nowrap">
                   {name} <span className="text-xs text-gray-500">({getPlayerPoints(p)} pts)</span>
                 </li>
               );
@@ -356,7 +356,7 @@ const AuctionPanel = ({ players, captains, isAdmin, isCaptain, username }) => {
           </ul>
         </div>
       )}
-      <button className="mt-6 px-6 py-2 bg-yellow-400 text-yellow-900 font-bold rounded shadow hover:bg-yellow-500" onClick={resetAuction}>Reset Auction</button>
+      <button className="mt-4 md:mt-6 px-4 md:px-6 py-2 bg-yellow-400 text-yellow-900 font-bold rounded shadow hover:bg-yellow-500 w-full md:w-auto" onClick={resetAuction}>Reset Auction</button>
     </div>
   );
 };

@@ -172,10 +172,10 @@ export default function PDFUploader({ onExtract }) {
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto p-8 bg-white/70 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-blue-200 flex flex-col gap-6 items-center animate-fade-in">
-      <div className="flex items-center gap-3 mb-2">
-        <MdSportsCricket className="text-4xl text-green-600 drop-shadow-lg" />
-        <h2 className="text-3xl font-extrabold bg-gradient-to-r from-green-700 via-blue-600 to-yellow-500 bg-clip-text text-transparent drop-shadow-lg tracking-tight">Upload Leaderboard PDFs</h2>
+    <div className="w-full max-w-xs md:max-w-xl mx-auto p-4 md:p-8 bg-white/70 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-blue-200 flex flex-col gap-4 md:gap-6 items-center animate-fade-in">
+      <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+        <MdSportsCricket className="text-3xl md:text-4xl text-green-600 drop-shadow-lg" />
+        <h2 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-green-700 via-blue-600 to-yellow-500 bg-clip-text text-transparent drop-shadow-lg tracking-tight">Upload Leaderboard PDFs</h2>
       </div>
       <div className="w-full flex flex-col gap-6">
         <section className="flex flex-col gap-2 bg-blue-50 rounded-2xl p-4 shadow">

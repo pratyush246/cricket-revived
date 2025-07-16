@@ -60,25 +60,25 @@ const SetsOfPlayers = ({ players, captains, username, isCaptain, isAdmin }) => {
   ];
 
   return (
-    <div className="w-full min-h-[60vh] py-8 px-2 md:px-0 bg-gradient-to-br from-green-50 via-yellow-50 to-blue-50 rounded-3xl shadow-inner flex flex-col gap-12">
-      <h1 className="text-4xl font-extrabold text-green-700 mb-4 text-center drop-shadow-lg tracking-tight">Sets of Players</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+    <div className="w-full min-h-[60vh] py-4 md:py-8 px-1 md:px-0 bg-gradient-to-br from-green-50 via-yellow-50 to-blue-50 rounded-3xl shadow-inner flex flex-col gap-6 md:gap-12 overflow-x-auto">
+      <h1 className="text-2xl md:text-4xl font-extrabold text-green-700 mb-2 md:mb-4 text-center drop-shadow-lg tracking-tight">Sets of Players</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-10 w-full">
         {sets.map((set, idx) => (
           <div
             key={idx}
-            className={`relative ${bracketStyles[idx].bg} ${bracketStyles[idx].border} border-4 rounded-3xl shadow-2xl p-8 flex flex-col items-center transition-transform duration-200 hover:-translate-y-2 hover:shadow-2xl`}
+            className={`relative ${bracketStyles[idx].bg} ${bracketStyles[idx].border} border-4 rounded-3xl shadow-2xl p-4 md:p-8 flex flex-col items-center transition-transform duration-200 hover:-translate-y-2 hover:shadow-2xl min-w-0`}
           >
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2">{bracketStyles[idx].icon}</div>
-            <h2 className={`text-2xl font-extrabold mb-6 mt-6 text-center ${bracketStyles[idx].titleColor} tracking-wide drop-shadow`}>{bracketStyles[idx].title}</h2>
-            <ol className="w-full flex flex-col gap-4">
+            <div className="absolute -top-6 md:-top-8 left-1/2 -translate-x-1/2">{bracketStyles[idx].icon}</div>
+            <h2 className={`text-lg md:text-2xl font-extrabold mb-2 md:mb-6 mt-2 md:mt-6 text-center ${bracketStyles[idx].titleColor} tracking-wide drop-shadow`}>{bracketStyles[idx].title}</h2>
+            <ol className="w-full flex flex-col gap-2 md:gap-4">
               {set.map((player, i) => (
-                <li key={player.name} className="w-full flex flex-col items-start bg-white/80 rounded-xl shadow p-4 border-l-4 border-green-200 hover:bg-green-50 transition">
-                  <span className="font-semibold text-lg text-green-900 flex items-center gap-2">
+                <li key={player.name} className="w-full flex flex-col items-start bg-white/80 rounded-xl shadow p-2 md:p-4 border-l-4 border-green-200 hover:bg-green-50 transition">
+                  <span className="font-semibold text-base md:text-lg text-green-900 flex items-center gap-2">
                     <span className="inline-block w-6 text-right font-bold text-gray-500">{i + 1}.</span>
-                    <MdGroups className="text-green-400 text-xl" />
+                    <MdGroups className="text-green-400 text-lg md:text-xl" />
                     {player.name}
                   </span>
-                  <span className="text-sm text-gray-500 mt-1">Points: <span className="font-bold text-green-700">{Math.round(player.cumulativePoints * 100) / 100}</span></span>
+                  <span className="text-xs md:text-sm text-gray-500 mt-1">Points: <span className="font-bold text-green-700">{Math.round(player.cumulativePoints * 100) / 100}</span></span>
                 </li>
               ))}
             </ol>

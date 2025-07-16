@@ -27,25 +27,25 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-green-200 via-green-100 to-yellow-100 animate-bg-fade">
-      <div className="w-full max-w-md mx-auto p-8 bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-green-200 flex flex-col gap-6 items-center animate-fade-in">
-        <div className="flex items-center gap-3 mb-2">
-          <MdSportsCricket className="text-4xl text-green-600 drop-shadow-lg" />
-          <h2 className="text-3xl font-extrabold bg-gradient-to-r from-green-700 via-blue-600 to-yellow-500 bg-clip-text text-transparent drop-shadow-lg tracking-tight">Cricket Login</h2>
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-green-200 via-green-100 to-yellow-100 animate-bg-fade px-2">
+      <div className="w-full max-w-xs md:max-w-md mx-auto p-4 md:p-8 bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-green-200 flex flex-col gap-4 md:gap-6 items-center animate-fade-in">
+        <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+          <MdSportsCricket className="text-3xl md:text-4xl text-green-600 drop-shadow-lg" />
+          <h2 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-green-700 via-blue-600 to-yellow-500 bg-clip-text text-transparent drop-shadow-lg tracking-tight">Cricket Login</h2>
         </div>
-        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2 md:gap-4">
           <input
             type="text"
             value={username}
             onChange={e => setUsername(e.target.value)}
             placeholder="Enter your username..."
-            className="w-full px-5 py-3 rounded-full border-2 border-green-200 shadow focus:outline-none focus:ring-2 focus:ring-green-400 text-lg"
+            className="w-full px-4 md:px-5 py-2 md:py-3 rounded-full border-2 border-green-200 shadow focus:outline-none focus:ring-2 focus:ring-green-400 text-base md:text-lg"
             autoFocus
           />
           <button
             type="submit"
             disabled={loading || !username.trim()}
-            className={`mt-2 px-6 py-3 rounded-full text-xl font-bold shadow-lg transition-all duration-200 border-2 flex items-center justify-center gap-2
+            className={`mt-2 px-4 md:px-6 py-2 md:py-3 rounded-full text-lg md:text-xl font-bold shadow-lg transition-all duration-200 border-2 flex items-center justify-center gap-2
               ${loading || !username.trim()
                 ? 'bg-gray-300 text-gray-400 border-gray-200 cursor-not-allowed'
                 : 'bg-gradient-to-r from-green-500 via-blue-500 to-yellow-400 text-white border-green-400 hover:scale-105 hover:shadow-2xl'}

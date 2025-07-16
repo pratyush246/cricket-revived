@@ -19,11 +19,11 @@ export default function Leaderboard({ players, onPlayerSelect }) {
   );
 
   return (
-    <div className="mt-6">
-      <h2 className="text-3xl font-extrabold mb-2 text-blue-800 drop-shadow">🏆 MVP Leaderboard</h2>
-      <div className="text-2xl text-blue-500 mb-8 font-medium tracking-wide text-center">Top performers of the tournament</div>
+    <div className="mt-4 md:mt-6 w-full max-w-full px-1 md:px-0 overflow-x-auto">
+      <h2 className="text-xl md:text-3xl font-extrabold mb-2 text-blue-800 drop-shadow">🏆 MVP Leaderboard</h2>
+      <div className="text-lg md:text-2xl text-blue-500 mb-4 md:mb-8 font-medium tracking-wide text-center">Top performers of the tournament</div>
       {/* Search Bar */}
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center mb-4 md:mb-8">
         <div className="relative w-full max-w-md">
           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
             <FiSearch className="h-5 w-5" />
@@ -33,7 +33,7 @@ export default function Leaderboard({ players, onPlayerSelect }) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search player by name..."
-            className="w-full pl-10 pr-10 py-2 rounded-full border-2 border-blue-200 shadow focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
+            className="w-full pl-10 pr-10 py-2 rounded-full border-2 border-blue-200 shadow focus:outline-none focus:ring-2 focus:ring-blue-400 text-base md:text-lg"
           />
           {search && (
             <button

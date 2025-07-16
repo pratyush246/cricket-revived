@@ -263,14 +263,14 @@ export default function CreatePoll() {
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto p-8 bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-green-200 flex flex-col gap-6 items-center animate-fade-in">
+    <div className="w-full max-w-xs md:max-w-xl mx-auto p-4 md:p-8 bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-green-200 flex flex-col gap-4 md:gap-6 items-center animate-fade-in">
       {/* Display current tournament mode */}
-      <div className="w-full flex justify-center mb-2">
-        <span className="px-4 py-2 rounded-full bg-blue-100 text-blue-800 font-bold text-lg border-2 border-blue-300">
+      <div className="w-full flex justify-center mb-1 md:mb-2">
+        <span className="px-3 md:px-4 py-1 md:py-2 rounded-full bg-blue-100 text-blue-800 font-bold text-base md:text-lg border-2 border-blue-300">
           Mode: {tournamentModeLabel}
         </span>
       </div>
-      <h2 className="text-2xl font-extrabold text-green-700 mb-2">Host a Poll</h2>
+      <h2 className="text-xl md:text-2xl font-extrabold text-green-700 mb-1 md:mb-2">Host a Poll</h2>
       {!poll && isAdmin && (
         <form onSubmit={handleCreate} className="w-full flex flex-col gap-4">
           <input

@@ -104,49 +104,30 @@ export default function AutoPanel({ players, captains, yesVoters, username }) {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-10 bg-gradient-to-br from-yellow-50 via-green-50 to-blue-50 rounded-3xl shadow-2xl border-4 border-green-200 flex flex-col gap-8 items-center animate-fade-in mt-12">
-      <h2 className="text-3xl font-extrabold text-green-700 mb-2 text-center drop-shadow-lg tracking-tight">AutoPanel</h2>
-      <div className="text-xl text-green-800 font-semibold text-center mb-4">
+    <div className="w-full max-w-full md:max-w-5xl mx-auto p-4 md:p-10 bg-gradient-to-br from-yellow-50 via-green-50 to-blue-50 rounded-3xl shadow-2xl border-4 border-green-200 flex flex-col gap-4 md:gap-8 items-center animate-fade-in mt-6 md:mt-12 overflow-x-auto">
+      <h2 className="text-2xl md:text-3xl font-extrabold text-green-700 mb-2 text-center drop-shadow-lg tracking-tight">AutoPanel</h2>
+      <div className="text-base md:text-xl text-green-800 font-semibold text-center mb-2 md:mb-4">
         Auto-generated teams for {captains.map((c, i) => (
           <span key={c} className={i === 0 ? 'text-blue-700 font-bold' : i === 1 ? 'text-green-700 font-bold' : 'text-yellow-700 font-bold'}>
             {c}{i < captains.length - 1 ? ', ' : ''}
           </span>
         ))} (MVP balanced)
       </div>
-      <div className="flex flex-col md:flex-row gap-8 w-full justify-center">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-8 w-full justify-center">
         {teams.map((team, idx) => (
-          <div key={idx} className={`flex-1 min-w-[400px] max-w-[520px] mx-auto bg-gradient-to-br from-white via-green-50 to-blue-50 rounded-3xl shadow-2xl border-4 border-green-200 p-6 flex flex-col items-center`}>
-            <div className={`text-2xl font-extrabold mb-2 ${idx === 0 ? 'text-blue-700' : idx === 1 ? 'text-green-700' : 'text-yellow-700'} drop-shadow-lg`}>{captains[idx]} Team</div>
-            <ul className="w-full min-h-[80px] flex flex-col gap-2 mt-2">
+          <div key={idx} className={`flex-1 min-w-0 md:min-w-[300px] max-w-full md:max-w-[520px] mx-auto bg-gradient-to-br from-white via-green-50 to-blue-50 rounded-3xl shadow-2xl border-4 border-green-200 p-3 md:p-6 flex flex-col items-center`}>
+            <div className={`text-lg md:text-2xl font-extrabold mb-1 md:mb-2 ${idx === 0 ? 'text-blue-700' : idx === 1 ? 'text-green-700' : 'text-yellow-700'} drop-shadow-lg`}>{captains[idx]} Team</div>
+            <ul className="w-full min-h-[40px] md:min-h-[80px] flex flex-col gap-1 md:gap-2 mt-1 md:mt-2">
               {team.map((p, i) => (
-                <li key={p?.name || p} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/80 shadow border-l-4 border-green-200 hover:bg-green-50 transition">
-                  <span className="font-semibold text-lg text-green-900 flex items-center gap-2">
-                    <span className="inline-block w-6 text-right font-bold text-gray-500">{i + 1}.</span>
-                    <span className="inline-block min-w-[140px] max-w-[220px] whitespace-nowrap overflow-hidden text-ellipsis">{p?.name || p}</span>
+                <li key={p?.name || p} className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-2 rounded-xl bg-white/80 shadow border-l-4 border-green-200 hover:bg-green-50 transition text-xs md:text-lg">
+                  <span className="font-semibold text-xs md:text-lg text-green-900 flex items-center gap-1 md:gap-2">
+                    <span className="inline-block w-4 md:w-6 text-right font-bold text-gray-500">{i + 1}.</span>
+                    <span className="inline-block min-w-[80px] md:min-w-[140px] max-w-[120px] md:max-w-[220px] whitespace-nowrap overflow-hidden text-ellipsis">{p?.name || p}</span>
                   </span>
-                  <span className="ml-auto px-3 py-1 rounded-full bg-gradient-to-r from-yellow-200 via-green-200 to-blue-200 text-green-900 font-bold text-sm shadow-inner border border-green-200 inline-block min-w-[80px] max-w-[120px] whitespace-nowrap overflow-hidden text-ellipsis">{p?.mvpPoints || 0} MVP</span>
-                  <button
-                    className={`ml-2 px-2 py-1 rounded font-bold border transition 
-                      ${username === captains[idx] 
-                        ? 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-400' 
-                        : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60 focus:outline-none'}`}
-                    onClick={() => username === captains[idx] && handleDrop(idx, p)}
-                    disabled={username !== captains[idx]}
-                    style={{
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                      borderRadius: '8px',
-                      outline: 'none',
-                      minWidth: '60px',
-                      maxWidth: '80px',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                  >Drop</button>
+                  <span className="ml-auto px-2 md:px-3 py-1 rounded-full bg-gradient-to-r from-yellow-200 via-green-200 to-blue-200 text-green-900 font-bold text-xs md:text-sm shadow-inner border border-green-200 inline-block min-w-[50px] md:min-w-[80px] max-w-[80px] md:max-w-[120px] whitespace-nowrap overflow-hidden text-ellipsis">{p?.mvpPoints || 0} MVP</span>
                 </li>
               ))}
             </ul>
-            <div className="mt-4 text-lg font-bold text-blue-800">Total MVP: <span className="text-2xl text-green-700">{getTeamMVP(team)}</span></div>
           </div>
         ))}
       </div>
